@@ -12,8 +12,8 @@ FEATURES:
 - Fast search on title and subtitle, optional extended search with descriptions
 
 HOW IT WORKS:
-The OE1 API provides a rolling weekly broadcast listing. Shows are accessible via
-loopstream IDs for approximately 30 days. This tool combines:
+The OE1 API provides a rolling weekly broadcast listing. Shows are accessible
+via loopstream IDs for approximately 30 days. This tool combines:
 
 1. INTERACTIVE MODE (-c):
    - Shows all 30 days of dates
@@ -43,11 +43,11 @@ You can also manually browse: https://oe1.orf.at/programm/YYYYMMDD
 Then search for the show by name in this tool.
 
 USAGE EXAMPLES:
-  ./oe1archive -c                     # Browse and select
-  ./oe1archive -s "Some title"            # Search by title/subtitle (fast)
-  ./oe1archive -s "Some description" -e         # Extended search with description (slow)
-  ./oe1archive -d "Some title" -p "L"     # Download all matches
-  ./oe1archive -d "Some description" -p "L" -e  # Download with extended search
+  ./oe1archive -c                          # Browse and select
+  ./oe1archive -s "Title"                  # Search by title/subtitle (fast)
+  ./oe1archive -s "Description" -e         # Search with description (slow)
+  ./oe1archive -d "Title" -p "L"           # Download all matches
+  ./oe1archive -d "Description" -p "L" -e  # Download with extended search
 """
 
 __version__ = "3.0"
@@ -66,14 +66,22 @@ from datetime import timedelta
 import time
 
 
+# Add audioapi as constant:
+AUDIOAPI_BASE_URL = "http://audioapi.orf.at/oe1/json/2.0/"
+BROADCAST_API_URL = 'https://audioapi.orf.at/oe1/api/json/current/broadcast/'
+
+
 class Archive:
     """Access OE1 archive with extended 30-day capability.
 
-    The OE1 API provides a rolling weekly window of broadcasts. However, loopstream IDs
-    remain valid for approximately 30 days. This tool simulates a 30-day view by:
+    The OE1 API provides a rolling weekly window of broadcasts. However,
+    loopstream IDs remain valid for approximately 30 days. This tool simulates
+    a 30-day view by:
     1. Fetching the current weekly API data
-    2. Creating placeholder entries for dates before the API window (up to 30 days back)
-    3. Allowing searches across all dates - when found, the actual broadcast data is used
+    2. Creating placeholder entries for dates before the API window (up to 30
+       days back)
+    3. Allowing searches across all dates - when found, the actual broadcast
+       data is used
     """
 
     def __init__(self, days=30):
@@ -85,8 +93,7 @@ class Archive:
     def _read_archive(self):
         """Read the current weekly archive from the API."""
         try:
-            json_data = read_json(
-                "http://audioapi.orf.at/oe1/json/2.0/broadcasts/")
+            json_data = read_json(AUDIOAPI_BASE_URL + "broadcasts/")
             print(
                 f"Loaded {len(json_data)} days from OE1 API",
                 file=sys.stderr)
@@ -99,7 +106,8 @@ class Archive:
         """Generate a 30-day view by fetching data from the API.
 
         Uses the path parameter API endpoint (/broadcasts/YYYYMMDD/) to fetch
-        all broadcasts for each day, extending beyond the standard weekly window.
+        all broadcasts for each day, extending beyond the standard weekly
+        window.
         """
         extended_json = []
 
@@ -115,7 +123,7 @@ class Archive:
                 oldest_api_date = dateutil.parser.parse(
                     self.api_json[-1].get('dateISO', ''))
                 print(
-                    "Loading extended archive data (this may take a moment)...",
+                    "Loading extended archive data (may take a moment)...",
                     file=sys.stderr)
 
                 # Fetch broadcasts for dates older than the API window
@@ -130,8 +138,7 @@ class Archive:
                     try:
                         # Use path parameter API to get broadcasts for specific
                         # date
-                        api_url = f"http://audioapi.orf.at/oe1/json/2.0/broadcasts/{
-                            date_int}/"
+                        api_url = AUDIOAPI_BASE_URL + f"broadcasts/{date_int}/"
                         broadcasts_data = read_json(api_url)
 
                         if broadcasts_data:
@@ -143,17 +150,18 @@ class Archive:
                                 'broadcasts': broadcasts_data
                             }
                             extended_json.append(archive_entry)
-                            print(
-                                f"  Loaded {archive_date.strftime('%a %d.%b')}: {
-                                    len(broadcasts_data)} broadcasts",
-                                file=sys.stderr)
+                            archtime = archive_date.strftime('%a %d.%b')
+                            num = len(broadcasts_data)
+                            print(f"  Loaded {archtime}: {num} broadcasts",
+                                  file=sys.stderr)
                         else:
+                            archtime = archive_date.strftime("%a, %d. %b %Y")
                             # Fallback to guide entry if fetch fails
                             guide_entry = {
                                 'dateISO': archive_date.isoformat(),
                                 'day': date_int,
                                 'broadcasts': [{
-                                    'title': f'[Archive Guide: {archive_date.strftime("%a, %d. %b %Y")}]',
+                                    'title': f'[Archive Guide: {archtime}]',
                                     'subtitle': 'Use -s to search for shows from this date',
                                     'startISO': archive_date.isoformat(),
                                     'programKey': f'archive_{date_int}',
@@ -162,12 +170,13 @@ class Archive:
                             }
                             extended_json.append(guide_entry)
                     except Exception:
+                        archtime = archive_date.strftime("%a, %d. %b %Y")
                         # If individual date fetch fails, create guide entry
                         guide_entry = {
                             'dateISO': archive_date.isoformat(),
                             'day': date_int,
                             'broadcasts': [{
-                                'title': f'[Archive Guide: {archive_date.strftime("%a, %d. %b %Y")}]',
+                                'title': f'[Archive Guide: {archtime}]',
                                 'subtitle': 'Use -s to search for shows from this date',
                                 'startISO': archive_date.isoformat(),
                                 'programKey': f'archive_{date_int}',
@@ -179,9 +188,9 @@ class Archive:
                     # Small delay to avoid overwhelming the API
                     time.sleep(0.1)
 
-                print(
-                    f"Archive data loaded: {len(extended_json)} days total",
-                    file=sys.stderr)
+                numdays = len(extended_json)
+                print(f"Archive data loaded: {numdays} days total",
+                      file=sys.stderr)
             except Exception as e:
                 print(
                     f"Note: Could not extend to 30 days: {e}",
@@ -238,7 +247,7 @@ class Archive:
         date = self.json[day]['day']
         pk = broadcast_entry['programKey']
 
-        burl = 'https://audioapi.orf.at/oe1/api/json/current/broadcast/%s/%d'
+        burl = BROADCAST_API_URL + '%s/%d'
         try:
             bjson = read_json(burl % (pk, date))
         except Exception as e:
@@ -263,7 +272,7 @@ class Archive:
         date = self.json[day]['day']
         pk = self.json[day]['broadcasts'][broadcast]['programKey']
 
-        burl = 'https://audioapi.orf.at/oe1/api/json/current/broadcast/%s/%d'
+        burl = BROADCAST_API_URL + '%s/%d'
         try:
             bjson = read_json(burl % (pk, date))
         except Exception:
@@ -326,7 +335,7 @@ class Archive:
                     try:
                         date = djson['day']
                         pk = bjson['programKey']
-                        burl = 'https://audioapi.orf.at/oe1/api/json/current/broadcast/%s/%d'
+                        burl = BROADCAST_API_URL + '%s/%d'
                         bjson_full = read_json(burl % (pk, date))
                         description = bjson_full.get('description', "")
                         if description and rex.search(description) is not None:
@@ -348,7 +357,8 @@ class Archive:
             # Skip placeholder entries
             if date is None or 'Archive' in title:
                 print(
-                    "  ✗ This is a placeholder entry. Use search (-s) to find shows from this date.")
+                    "  ✗ This is a placeholder entry. Use search (-s) to find"
+                    " shows from this date.")
                 return False
 
             url = self.get_broadcast_url(day, broadcast)
@@ -357,7 +367,6 @@ class Archive:
                 print(f"  ✗ No stream available for: {title}")
                 return False
 
-            dirname = get_directory_name(prefix, date)
             print(f"  ↓ {title}")
 
             # Create directory and download files
@@ -488,8 +497,8 @@ def screen_help():
 Usage:
     {0} -h, --help              Show this help message
     {0} -c, --choose            Interactive mode - choose and download
-    {0} -s, --search TITLE      Search by title and subtitle (fast, ~10 seconds)
-    {0} -s TITLE -e             Extended search including description (slow, ~5 minutes)
+    {0} -s, --search TITLE      Search by title and subtitle (fast)
+    {0} -s TITLE -e             Extended search including description (slow)
     {0} -d, --download TITLE    Auto-download all matching broadcasts
                                  (requires directory prefix via -p)
     {0} -p, --prefix PREFIX     Directory prefix for downloads
@@ -549,8 +558,8 @@ def screen_choose(archive):
 
     # Check if date has actual broadcasts
     if not broadcasts:
-        print(
-            f"No broadcasts available for {chosen_datetime.strftime('%A, %d. %B %Y')}.")
+        chosentime = chosen_datetime.strftime('%A, %d. %B %Y')
+        print(f"No broadcasts available for {chosentime}.")
         return
 
     print("Choose a broadcast:")
@@ -638,7 +647,8 @@ def print_broadcast_info(archive, day, broadcast):
 if __name__ == "__main__":
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hcs:p:d:e", [
-                                   "help", "choose", "search=", "prefix=", "download=", "extended-search"])
+                                   "help", "choose", "search=", "prefix=",
+                                   "download=", "extended-search"])
     except getopt.GetoptError as err:
         print(err)
         screen_help()
