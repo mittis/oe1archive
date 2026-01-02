@@ -117,7 +117,7 @@ class Archive:
         if len(self.api_json) > 0:
             try:
                 oldest_api_date = dateutil.parser.parse(
-                    self.api_json[-1].get('dateISO', ''))
+                    self.api_json[-1].get("dateISO", ""))
                 print("Loading extended archive data (may take a moment)...",
                       file=sys.stderr)
 
@@ -128,7 +128,7 @@ class Archive:
                         len(self.api_json), self.days_back + 1):
                     archive_date = oldest_api_date - \
                         timedelta(days=days_offset)
-                    date_int = int(archive_date.strftime('%Y%m%d'))
+                    date_int = int(archive_date.strftime("%Y%m%d"))
 
                     try:
                         # Use path parameter API to get broadcasts for specific
@@ -140,12 +140,12 @@ class Archive:
                             # Create entry for this date with fetched
                             # broadcasts
                             archive_entry = {
-                                'dateISO': archive_date.isoformat(),
-                                'day': date_int,
-                                'broadcasts': broadcasts_data
+                                "dateISO": archive_date.isoformat(),
+                                "day": date_int,
+                                "broadcasts": broadcasts_data
                             }
                             extended_json.append(archive_entry)
-                            archtime = archive_date.strftime('%a %d.%b')
+                            archtime = archive_date.strftime("%a %d.%b")
                             num = len(broadcasts_data)
                             print(f"  Loaded {archtime}: {num} broadcasts",
                                   file=sys.stderr)
@@ -153,14 +153,14 @@ class Archive:
                             archtime = archive_date.strftime("%a, %d. %b %Y")
                             # Fallback to guide entry if fetch fails
                             guide_entry = {
-                                'dateISO': archive_date.isoformat(),
-                                'day': date_int,
-                                'broadcasts': [{
-                                    'title': f'[Archive Guide: {archtime}]',
-                                    'subtitle': 'Use -s to search for shows from this date',
-                                    'startISO': archive_date.isoformat(),
-                                    'programKey': f'archive_{date_int}',
-                                    'is_guide': True
+                                "dateISO": archive_date.isoformat(),
+                                "day": date_int,
+                                "broadcasts": [{
+                                    "title": f"[Archive Guide: {archtime}]",
+                                    "subtitle": "Use -s to search for shows from this date",
+                                    "startISO": archive_date.isoformat(),
+                                    "programKey": f"archive_{date_int}",
+                                    "is_guide": True
                                 }]
                             }
                             extended_json.append(guide_entry)
@@ -168,14 +168,14 @@ class Archive:
                         archtime = archive_date.strftime("%a, %d. %b %Y")
                         # If individual date fetch fails, create guide entry
                         guide_entry = {
-                            'dateISO': archive_date.isoformat(),
-                            'day': date_int,
-                            'broadcasts': [{
-                                'title': f'[Archive Guide: {archtime}]',
-                                'subtitle': 'Use -s to search for shows from this date',
-                                'startISO': archive_date.isoformat(),
-                                'programKey': f'archive_{date_int}',
-                                'is_guide': True
+                            "dateISO": archive_date.isoformat(),
+                            "day": date_int,
+                            "broadcasts": [{
+                                "title": f"[Archive Guide: {archtime}]",
+                                "subtitle": "Use -s to search for shows from this date",
+                                "startISO": archive_date.isoformat(),
+                                "programKey": f"archive_{date_int}",
+                                "is_guide": True
                             }]
                         }
                         extended_json.append(guide_entry)
@@ -198,7 +198,7 @@ class Archive:
         """Return broadcasts for a given day index."""
         if day < 0 or day >= len(self.json):
             return []
-        bjson = self.json[day].get('broadcasts', [])
+        bjson = self.json[day].get("broadcasts", [])
         # Don't filter - return all entries including guides
         return list(map(_json_to_broadcast, bjson))
 
@@ -206,38 +206,38 @@ class Archive:
         """Return specific broadcast information."""
         if day < 0 or day >= len(self.json) or broadcast < 0:
             return (None, None)
-        broadcasts = self.json[day].get('broadcasts', [])
+        broadcasts = self.json[day].get("broadcasts", [])
         if broadcast >= len(broadcasts):
             return (None, None)
         return _json_to_broadcast(broadcasts[broadcast])
 
     def get_player_url(self, day, broadcast):
         """Get the player URL for a broadcast."""
-        date = self.json[day]['day']
-        pk = self.json[day]['broadcasts'][broadcast]['programKey']
+        date = self.json[day]["day"]
+        pk = self.json[day]["broadcasts"][broadcast]["programKey"]
         url = "https://oe1.orf.at/player/%d/%s"
         return url % (date, pk)
 
     def get_broadcast_title(self, day, broadcast):
         """Return broadcast title."""
-        return self.json[day]['broadcasts'][broadcast]['title']
+        return self.json[day]["broadcasts"][broadcast]["title"]
 
     def get_broadcast_subtitle(self, day, broadcast):
         """Return broadcast subtitle."""
-        return self.json[day]['broadcasts'][broadcast]['subtitle']
+        return self.json[day]["broadcasts"][broadcast]["subtitle"]
 
     def get_broadcast_pk(self, day, broadcast):
         """Return broadcast program key."""
-        return self.json[day]['broadcasts'][broadcast]['programKey']
+        return self.json[day]["broadcasts"][broadcast]["programKey"]
 
     def get_broadcast_url(self, day, broadcast):
         """Get the stream URL for a broadcast.
 
         Handles both API broadcasts and archive shows from program pages.
         """
-        broadcast_entry = self.json[day]['broadcasts'][broadcast]
-        date = self.json[day]['day']
-        pk = broadcast_entry['programKey']
+        broadcast_entry = self.json[day]["broadcasts"][broadcast]
+        date = self.json[day]["day"]
+        pk = broadcast_entry["programKey"]
 
         burl = AUDIOAPI_API_URL + "broadcasts/%s/%d"
         try:
@@ -248,21 +248,21 @@ class Archive:
                 file=sys.stderr)
             return None
 
-        sjson = bjson.get('streams', [])
+        sjson = bjson.get("streams", [])
         if len(sjson) == 0:
             return None
 
-        sid = sjson[0].get('loopStreamId')
+        sid = sjson[0].get("loopStreamId")
         if sid is None:
             return None
 
-        surl = 'https://loopstream01.apa.at/?channel=oe1&shoutcast=0&id=%s'
+        surl = "https://loopstream01.apa.at/?channel=oe1&shoutcast=0&id=%s"
         return surl % sid
 
     def get_broadcast_description(self, day, broadcast):
         """Get broadcast description and akm info."""
-        date = self.json[day]['day']
-        pk = self.json[day]['broadcasts'][broadcast]['programKey']
+        date = self.json[day]["day"]
+        pk = self.json[day]["broadcasts"][broadcast]["programKey"]
 
         burl = AUDIOAPI_API_URL + "broadcasts/%s/%d"
         try:
@@ -270,8 +270,8 @@ class Archive:
         except Exception:
             return ""
 
-        description = bjson.get('description', "")
-        akm = bjson.get('akm', "")
+        description = bjson.get("description", "")
+        akm = bjson.get("akm", "")
         if description is None:
             description = ""
         if akm is None:
@@ -291,11 +291,11 @@ class Archive:
         rex = re.compile(key, re.IGNORECASE)
 
         res = []
-        total_broadcasts = sum(len(djson['broadcasts']) for djson in self.json)
+        total_broadcasts = sum(len(djson["broadcasts"]) for djson in self.json)
         checked_broadcasts = 0
 
         for d, djson in enumerate(self.json):
-            for b, bjson in enumerate(djson['broadcasts']):
+            for b, bjson in enumerate(djson["broadcasts"]):
                 checked_broadcasts += 1
 
                 # Show progress every 10 broadcasts
@@ -306,18 +306,18 @@ class Archive:
                         file=sys.stderr)
 
                 # Skip placeholder entries in search
-                if bjson.get('is_placeholder', False):
+                if bjson.get("is_placeholder", False):
                     continue
 
                 found = False
 
                 # Search in title
-                if rex.search(bjson['title']) is not None:
+                if rex.search(bjson["title"]) is not None:
                     found = True
 
                 # Search in subtitle
                 if not found:
-                    subtitle = bjson.get('subtitle')
+                    subtitle = bjson.get("subtitle")
                     if subtitle is not None and rex.search(
                             subtitle) is not None:
                         found = True
@@ -329,7 +329,7 @@ class Archive:
                         pk = bjson["programKey"]
                         burl = AUDIOAPI_API_URL + "broadcasts/%s/%d"
                         bjson_full = read_json(burl % (pk, date))
-                        description = bjson_full.get('description', "")
+                        description = bjson_full.get("description", "")
                         if description and rex.search(description) is not None:
                             found = True
                     except BaseException:
@@ -347,7 +347,7 @@ class Archive:
             date, title = self.get_broadcast(day, broadcast)
 
             # Skip placeholder entries
-            if date is None or 'Archive' in title:
+            if date is None or "Archive" in title:
                 print(
                     "  ✗ This is a placeholder entry. Use search (-s) to find"
                     " shows from this date.")
@@ -377,13 +377,13 @@ class Archive:
 
 def _json_to_day(djson):
     """Convert JSON date to datetime object."""
-    return dateutil.parser.parse(djson['dateISO'])
+    return dateutil.parser.parse(djson["dateISO"])
 
 
 def _json_to_broadcast(bjson):
     """Convert JSON broadcast to (datetime, title) tuple."""
-    dt = dateutil.parser.parse(bjson['startISO'])
-    return (dt, bjson['title'])
+    dt = dateutil.parser.parse(bjson["startISO"])
+    return (dt, bjson["title"])
 
 
 def read_json(url):
@@ -429,7 +429,7 @@ def write_html_file(name, datetime_obj, title, description):
     longname = get_directory_name(name, datetime_obj)
     filepath = os.path.join(longname, longname + ".html")
 
-    with open(filepath, 'w+', encoding='utf-8') as file:
+    with open(filepath, "w+", encoding="utf-8") as file:
         file.write("<!DOCTYPE html>\n")
         file.write("<html>\n")
         file.write("<head>\n")
@@ -463,17 +463,17 @@ def write_mp3_file(name, datetime_obj, url):
         # files
         r = requests.get(url, stream=True, timeout=3600)
         if r.status_code == 200:
-            total_size = int(r.headers.get('content-length', 0))
+            total_size = int(r.headers.get("content-length", 0))
             downloaded = 0
 
-            with open(filepath, 'wb') as f:
+            with open(filepath, "wb") as f:
                 for chunk in r.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
                         downloaded += len(chunk)
                         if total_size:
                             percent = (downloaded / total_size) * 100
-                            print(f"      Progress: {percent:.1f}%", end='\r')
+                            print(f"      Progress: {percent:.1f}%", end="\r")
 
             print(f"      ✓ Saved: {os.path.basename(filepath)}    ")
         else:
@@ -516,7 +516,7 @@ def screen_choose(archive):
         elif broadcasts_count == 1:
             # Check if it's a guide entry
             b = archive.get_broadcasts(i)[0]
-            if b[1].startswith('[Archive Guide'):
+            if b[1].startswith("[Archive Guide"):
                 marker = "  🔍 Use search for this date"
             else:
                 marker = f"  ({broadcasts_count} broadcast)"
@@ -532,7 +532,7 @@ def screen_choose(archive):
     # Check if this is a guide entry
     if broadcasts and len(broadcasts) == 1:
         title, _ = broadcasts[0]
-        if title and title.startswith('[Archive Guide'):
+        if title and title.startswith("[Archive Guide"):
             print(f"{title}")
             print()
             print("This date is in the archive window (older than 8 days).")
@@ -550,7 +550,7 @@ def screen_choose(archive):
 
     # Check if date has actual broadcasts
     if not broadcasts:
-        chosentime = chosen_datetime.strftime('%A, %d. %B %Y')
+        chosentime = chosen_datetime.strftime("%A, %d. %B %Y")
         print(f"No broadcasts available for {chosentime}.")
         return
 
@@ -615,7 +615,7 @@ def screen_download_all(archive, search_key, prefix, deep_search=False):
     success_count = 0
     for d, b in results:
         date, title = archive.get_broadcast(d, b)
-        print(f"{date.strftime('%a %d.%m.%Y %H:%M:%S')} - {title}")
+        print(f"{date.strftime("%a %d.%m.%Y %H:%M:%S")} - {title}")
 
         if archive.download_broadcast(d, b, prefix):
             success_count += 1
