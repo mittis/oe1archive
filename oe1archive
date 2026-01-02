@@ -66,7 +66,7 @@ from datetime import timedelta
 
 
 # Add audioapi as constant:
-AUDIOAPI_BASE_URL = "http://audioapi.orf.at/oe1/json/2.0/"
+AUDIOAPI_BASE_URL = "https://audioapi.orf.at/oe1/json/2.0/"
 BROADCAST_API_URL = 'https://audioapi.orf.at/oe1/api/json/current/broadcast/'
 
 
@@ -219,7 +219,7 @@ class Archive:
         """Get the player URL for a broadcast."""
         date = self.json[day]['day']
         pk = self.json[day]['broadcasts'][broadcast]['programKey']
-        url = "http://oe1.orf.at/player/%d/%s"
+        url = "https://oe1.orf.at/player/%d/%s"
         return url % (date, pk)
 
     def get_broadcast_title(self, day, broadcast):

@@ -74,7 +74,7 @@ The OE1 API provides a rolling weekly window of current broadcasts. Streams rema
 
 ## Technical Details
 
-- **API**: http://audioapi.orf.at/oe1/json/2.0/
+- **API**: https://audioapi.orf.at/oe1/json/2.0/
 - **Stream Source**: https://loopstream01.apa.at/?channel=oe1&shoutcast=0&id=...
 - **Archive Window**: ~30 days (loopstream availability)
 
