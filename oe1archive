@@ -63,7 +63,6 @@ import re
 import os
 import requests
 from datetime import timedelta
-import time
 
 
 # Add audioapi as constant:
@@ -184,9 +183,6 @@ class Archive:
                             }]
                         }
                         extended_json.append(guide_entry)
-
-                    # Small delay to avoid overwhelming the API
-                    time.sleep(0.1)
 
                 numdays = len(extended_json)
                 print(f"Archive data loaded: {numdays} days total",
