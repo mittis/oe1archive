@@ -32,22 +32,26 @@ Browse all 30 days and download shows directly.
 
 ### Search Shows by Title and Subtitle
 ```bash
-./oe1archive -s "Show Name"
+./oe1archive -s "Show Name" -r 30
 ```
-Fast search across title and subtitle fields. **Takes approximately 10 seconds.** Use this for most searches.
+Fast search across title and subtitle fields. **Takes approximately 10
+seconds.**
 
 ### Extended Search (including descriptions)
 ```bash
-./oe1archive -s "Show Name" -e
+./oe1archive -s "Show Name" -e -r 30
 ```
-Search all available broadcasts including full description text. **Takes approximately 5 minutes.** Use this if the regular search doesn't find what you're looking for.
+Search all available broadcasts including full description text. **Takes
+approximately 5 minutes.** Use this if the regular search doesn't find what
+you're looking for.
 
 ### Batch Download
 ```bash
 ./oe1archive -d "Show Name" -p "prefix"
 ```
-Download all matching broadcasts with metadata and audio. Use `-e` flag for extended search:
-`./oe1archive -d "Show Name" -p "prefix" -e`
+Download all matching broadcasts with metadata and audio. Use `-e` flag for
+extended search:
+`./oe1archive -d "Show Name" -p "prefix" -e -r 30`
 
 ### Command Examples
 
@@ -59,18 +63,20 @@ Download all matching broadcasts with metadata and audio. Use `-e` flag for exte
 ./oe1archive -s "Show Name"
 
 # Deep search including descriptions
-./oe1archive -s "Some Keyword" -e
+./oe1archive -s "Some Keyword" -e -r 30
 
 # Batch download all matches (fast search)
-./oe1archive -d "Show Name" -p "prefix"
+./oe1archive -d "Show Name" -p "prefix" -r 30
 
 # Batch download all matches (deep search)
-./oe1archive -d "Some Keyword" -p "prefix" -e
+./oe1archive -d "Some Keyword" -p "prefix" -e -r 30
 ```
 
 ## How It Works
 
-The OE1 API provides a rolling weekly window of current broadcasts. Streams remain accessible via loopstream for ~30 days, enabling full month archive access through direct download without search requirements.
+The OE1 API provides a rolling weekly window of current broadcasts. Streams
+remain accessible via loopstream for ~30 days, enabling full month archive
+access through direct download without search requirements.
 
 ## Technical Details
 

@@ -473,24 +473,33 @@ def screen_help():
     """Display help information."""
     print("""OE1 Archive - Extended 30-day downloader
 
-Usage:
-    {0} -h, --help              Show this help message
-    {0} -c, --choose            Interactive mode - choose and download
-    {0} -s, --search TITLE      Search by title and subtitle (fast)
-    {0} -s TITLE -e             Extended search including description (slow)
-    {0} -d, --download TITLE    Auto-download all matching broadcasts
-                                 (requires directory prefix via -p)
-    {0} -p, --prefix PREFIX     Directory prefix for downloads
-    {0} -e, --extended-search   Extended search (use with -s or -d)
-    {0} -r, --range DAYS        Extended range from 8 days to given number
-                                    (max 30 days)
+OPTIONS:
+    -c, --choose            Interactive mode - choose and download
+    -d, --download TITLE    Auto-download all matching broadcasts
+                            (requires directory prefix via -p)
+    -e, --extended-search   Extended search (use with -s or -d)
+    -h, --help              Show this help message
+    -p, --prefix PREFIX     Directory prefix for downloads
+    -r, --range DAYS        Extended range from 8 days to given number
+                            (max 30 days)
+    -s, --search TITLE      Search by title and subtitle (fast)
 
 Examples:
-    {0} -c                      Choose broadcast interactively
-    {0} -s "Music"              Search title/subtitle for "Music" (fast)
-    {0} -s "Music" -e           Extended search including description (slow)
-    {0} -d "Brunch" -p "Brunch" Download all "Brunch" broadcasts
-    {0} -d "Brunch" -p "B" -e   Download using extended search
+
+  Search title/subtitle for "Music":
+    {0} -s "Music"
+
+  Choose broadcast interactively within past 14 days:
+    {0} -c -r 14
+
+  Extended search including description (very slow)
+    {0} -e -s "Music" -r 30
+
+  Download all "Brunch" broadcasts:
+    {0} -d "Brunch" -p "Brunch"
+
+   Download using extended search:
+    {0} -e -r 30 -d "Brunch" -p "Brunch"
 """.format(sys.argv[0]))
 
 
