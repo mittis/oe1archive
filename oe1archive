@@ -65,13 +65,11 @@ import requests
 from datetime import timedelta
 
 
-# Add audioapi as constant:
-AUDIOAPI_BASE_URL = "https://audioapi.orf.at/oe1/json/2.0/"
-BROADCAST_API_URL = 'https://audioapi.orf.at/oe1/api/json/current/broadcast/'
+AUDIOAPI_API_URL = "https://audioapi.orf.at/oe1/api/json/current/"
 
 
 class Archive:
-    """Access OE1 archive with extended 30-day capability.
+    """OE1 archive with extended 30-day capability.
 
     The OE1 API provides a rolling weekly window of broadcasts. However,
     loopstream IDs remain valid for approximately 30 days. This tool simulates
@@ -92,10 +90,9 @@ class Archive:
     def _read_archive(self):
         """Read the current weekly archive from the API."""
         try:
-            json_data = read_json(AUDIOAPI_BASE_URL + "broadcasts/")
-            print(
-                f"Loaded {len(json_data)} days from OE1 API",
-                file=sys.stderr)
+            json_data = read_json(AUDIOAPI_API_URL + "broadcasts/")
+            num_days = len(json_data)
+            print(f"Loaded {num_days} days from OE1 API", file=sys.stderr)
             return json_data
         except Exception as e:
             print(f"Error fetching broadcasts: {e}", file=sys.stderr)
@@ -121,9 +118,8 @@ class Archive:
             try:
                 oldest_api_date = dateutil.parser.parse(
                     self.api_json[-1].get('dateISO', ''))
-                print(
-                    "Loading extended archive data (may take a moment)...",
-                    file=sys.stderr)
+                print("Loading extended archive data (may take a moment)...",
+                      file=sys.stderr)
 
                 # Fetch broadcasts for dates older than the API window
                 # Start from len(self.api_json) to avoid re-fetching dates
@@ -137,7 +133,7 @@ class Archive:
                     try:
                         # Use path parameter API to get broadcasts for specific
                         # date
-                        api_url = AUDIOAPI_BASE_URL + f"broadcasts/{date_int}/"
+                        api_url = AUDIOAPI_API_URL + f"broadcasts/{date_int}/"
                         broadcasts_data = read_json(api_url)
 
                         if broadcasts_data:
@@ -243,7 +239,7 @@ class Archive:
         date = self.json[day]['day']
         pk = broadcast_entry['programKey']
 
-        burl = BROADCAST_API_URL + '%s/%d'
+        burl = AUDIOAPI_API_URL + "broadcasts/%s/%d"
         try:
             bjson = read_json(burl % (pk, date))
         except Exception as e:
@@ -268,7 +264,7 @@ class Archive:
         date = self.json[day]['day']
         pk = self.json[day]['broadcasts'][broadcast]['programKey']
 
-        burl = BROADCAST_API_URL + '%s/%d'
+        burl = AUDIOAPI_API_URL + "broadcasts/%s/%d"
         try:
             bjson = read_json(burl % (pk, date))
         except Exception:
@@ -329,9 +325,9 @@ class Archive:
                 # Search in description (only if deep_search is enabled)
                 if not found and deep_search:
                     try:
-                        date = djson['day']
-                        pk = bjson['programKey']
-                        burl = BROADCAST_API_URL + '%s/%d'
+                        date = djson["day"]
+                        pk = bjson["programKey"]
+                        burl = AUDIOAPI_API_URL + "broadcasts/%s/%d"
                         bjson_full = read_json(burl % (pk, date))
                         description = bjson_full.get('description', "")
                         if description and rex.search(description) is not None:
