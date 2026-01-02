@@ -62,11 +62,11 @@ import getopt
 import re
 import os
 import requests
-from datetime import datetime, timedelta
+from datetime import timedelta
 import time
 
 
-class SuperArchive:
+class Archive:
     """Access OE1 archive with extended 30-day capability.
 
     The OE1 API provides a rolling weekly window of broadcasts. However, loopstream IDs
@@ -115,7 +115,7 @@ class SuperArchive:
                 oldest_api_date = dateutil.parser.parse(
                     self.api_json[-1].get('dateISO', ''))
                 print(
-                    f"Loading extended archive data (this may take a moment)...",
+                    "Loading extended archive data (this may take a moment)...",
                     file=sys.stderr)
 
                 # Fetch broadcasts for dates older than the API window
@@ -130,7 +130,8 @@ class SuperArchive:
                     try:
                         # Use path parameter API to get broadcasts for specific
                         # date
-                        api_url = f"http://audioapi.orf.at/oe1/json/2.0/broadcasts/{date_int}/"
+                        api_url = f"http://audioapi.orf.at/oe1/json/2.0/broadcasts/{
+                            date_int}/"
                         broadcasts_data = read_json(api_url)
 
                         if broadcasts_data:
@@ -143,7 +144,8 @@ class SuperArchive:
                             }
                             extended_json.append(archive_entry)
                             print(
-                                f"  Loaded {archive_date.strftime('%a %d.%b')}: {len(broadcasts_data)} broadcasts",
+                                f"  Loaded {archive_date.strftime('%a %d.%b')}: {
+                                    len(broadcasts_data)} broadcasts",
                                 file=sys.stderr)
                         else:
                             # Fallback to guide entry if fetch fails
@@ -159,7 +161,7 @@ class SuperArchive:
                                 }]
                             }
                             extended_json.append(guide_entry)
-                    except Exception as e:
+                    except Exception:
                         # If individual date fetch fails, create guide entry
                         guide_entry = {
                             'dateISO': archive_date.isoformat(),
@@ -264,7 +266,7 @@ class SuperArchive:
         burl = 'https://audioapi.orf.at/oe1/api/json/current/broadcast/%s/%d'
         try:
             bjson = read_json(burl % (pk, date))
-        except Exception as e:
+        except Exception:
             return ""
 
         description = bjson.get('description', "")
@@ -298,7 +300,8 @@ class SuperArchive:
                 # Show progress every 10 broadcasts
                 if checked_broadcasts % 10 == 0:
                     print(
-                        f"Searching... {checked_broadcasts}/{total_broadcasts} broadcasts checked",
+                        f"Searching... {
+                            checked_broadcasts}/{total_broadcasts} broadcasts checked",
                         file=sys.stderr)
 
                 # Skip placeholder entries in search
@@ -345,7 +348,7 @@ class SuperArchive:
             # Skip placeholder entries
             if date is None or 'Archive' in title:
                 print(
-                    f"  ✗ This is a placeholder entry. Use search (-s) to find shows from this date.")
+                    "  ✗ This is a placeholder entry. Use search (-s) to find shows from this date.")
                 return False
 
             url = self.get_broadcast_url(day, broadcast)
@@ -453,7 +456,7 @@ def write_mp3_file(name, datetime_obj, url):
     longname = get_directory_name(name, datetime_obj)
     filepath = os.path.join(longname, longname + ".mp3")
 
-    print(f"      Downloading MP3...")
+    print("      Downloading MP3...")
     try:
         # Use generous timeout (3600 seconds = 60 minutes) for very large MP3
         # files
@@ -575,7 +578,7 @@ def screen_search(archive, key, deep_search=False):
     """Search for broadcasts matching a pattern.
 
     Args:
-        archive: SuperArchive instance
+        archive: Archive instance
         key: Search pattern
         deep_search: If True, search in description as well (slower)
     """
@@ -594,7 +597,7 @@ def screen_download_all(archive, search_key, prefix, deep_search=False):
     """Automatically download all broadcasts matching a search pattern.
 
     Args:
-        archive: SuperArchive instance
+        archive: Archive instance
         search_key: Search pattern
         prefix: Directory prefix for downloads
         deep_search: If True, search in description as well (slower)
@@ -633,7 +636,6 @@ def print_broadcast_info(archive, day, broadcast):
 
 
 if __name__ == "__main__":
-
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hcs:p:d:e", [
                                    "help", "choose", "search=", "prefix=", "download=", "extended-search"])
@@ -665,7 +667,7 @@ if __name__ == "__main__":
             extended_search = True
 
     # Initialize archive
-    archive = SuperArchive(days=30)
+    archive = Archive(days=30)
 
     # Execute requested action
     if choose_mode:
