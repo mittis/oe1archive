@@ -75,57 +75,46 @@ class Archive:
     loopstream IDs remain valid for approximately 30 days. This tool simulates
     a 30-day view by:
     1. Fetching the current weekly API data
-    2. Creating placeholder entries for dates before the API window (up to 30
-       days back)
+    2. Creating placeholder entries for dates before the API window
     3. Allowing searches across all dates - when found, the actual broadcast
        data is used
     """
 
-    def __init__(self, days=30):
-        """Initialize archive with configurable day range (default 30 days)."""
-        self.days_back = days
-        self.api_json = self._read_archive()
-        self.json = self._generate_30day_view()
+    def __init__(self, days):
+        """Initialize archive with configurable number of days back."""
+        self._fetch_weekly_archive()
+        self._extend_archive_by_days(days)
 
-    def _read_archive(self):
+    def _fetch_weekly_archive(self):
         """Read the current weekly archive from the API."""
+        self.weekly_archive = []
         try:
-            json_data = read_json(AUDIOAPI_API_URL + "broadcasts/")
-            num_days = len(json_data)
-            print(f"Loaded {num_days} days from OE1 API", file=sys.stderr)
-            return json_data
+            self.weekly_archive = read_json(AUDIOAPI_API_URL + "broadcasts/")
+            num_days = len(self.weekly_archive)
+            print(f"Loaded initially {num_days} days", file=sys.stderr)
         except Exception as e:
             print(f"Error fetching broadcasts: {e}", file=sys.stderr)
-            return []
 
-    def _generate_30day_view(self):
-        """Generate a 30-day view by fetching data from the API.
+    def _extend_archive_by_days(self, days):
+        """Generate a 30-day view by fetching data from the API."""
 
-        Uses the path parameter API endpoint (/broadcasts/YYYYMMDD/) to fetch
-        all broadcasts for each day, extending beyond the standard weekly
-        window.
-        """
-        extended_json = []
-
-        if not self.api_json:
-            return extended_json
-
+        self.json = []
         # Add all API data
-        extended_json.extend(self.api_json)
+        self.json.extend(self.weekly_archive)
 
         # For dates older than the API window, fetch via path parameter API
-        if len(self.api_json) > 0:
+        if len(self.weekly_archive) > 0:
             try:
                 oldest_api_date = dateutil.parser.parse(
-                    self.api_json[-1].get("dateISO", ""))
+                    self.weekly_archive[-1].get("dateISO", ""))
                 print("Loading extended archive data (may take a moment)...",
                       file=sys.stderr)
 
                 # Fetch broadcasts for dates older than the API window
-                # Start from len(self.api_json) to avoid re-fetching dates
-                # already in api_json
+                # Start from len(self.weekly_archive) to avoid re-fetching dates
+                # already in weekly_archive
                 for days_offset in range(
-                        len(self.api_json), self.days_back + 1):
+                        len(self.weekly_archive), days + 1):
                     archive_date = oldest_api_date - \
                         timedelta(days=days_offset)
                     date_int = int(archive_date.strftime("%Y%m%d"))
@@ -144,7 +133,7 @@ class Archive:
                                 "day": date_int,
                                 "broadcasts": broadcasts_data
                             }
-                            extended_json.append(archive_entry)
+                            self.json.append(archive_entry)
                             archtime = archive_date.strftime("%a %d.%b")
                             num = len(broadcasts_data)
                             print(f"  Loaded {archtime}: {num} broadcasts",
@@ -163,7 +152,7 @@ class Archive:
                                     "is_guide": True
                                 }]
                             }
-                            extended_json.append(guide_entry)
+                            self.json.append(guide_entry)
                     except Exception:
                         archtime = archive_date.strftime("%a, %d. %b %Y")
                         # If individual date fetch fails, create guide entry
@@ -178,17 +167,15 @@ class Archive:
                                 "is_guide": True
                             }]
                         }
-                        extended_json.append(guide_entry)
+                        self.json.append(guide_entry)
 
-                numdays = len(extended_json)
+                numdays = len(self.json)
                 print(f"Archive data loaded: {numdays} days total",
                       file=sys.stderr)
             except Exception as e:
                 print(
                     f"Note: Could not extend to 30 days: {e}",
                     file=sys.stderr)
-
-        return extended_json
 
     def get_days(self):
         """Return list of available days."""
