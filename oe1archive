@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-"""A tool to query the OE1 30-day archive and download streams with HTML pages.
+"""A tool to query the OE1 archive and download streams with HTML pages.
 
 FEATURES:
-- Browse all 30 days in interactive mode
+- Browse beyond weekly summary in interactive mode
 - Recent week (API window): Direct show selection and download
 - Older 22+ days (archive): Search for specific shows, then download
 - Automatic loopstream ID extraction (no manual URL searching)
@@ -16,7 +16,6 @@ The OE1 API provides a rolling weekly broadcast listing. Shows are accessible
 via loopstream IDs for approximately 30 days. This tool combines:
 
 1. INTERACTIVE MODE (-c):
-   - Shows all 30 days of dates
    - Recent week: Select from full broadcast list
    - Older dates: Directs you to search for specific shows
 
@@ -36,15 +35,16 @@ via loopstream IDs for approximately 30 days. This tool combines:
    - Use -e flag for extended search matching
 
 ACCESSING OLDER SHOWS:
-For dates older than 8 days, use search by show name:
-   ./oe1archive -s "Show Name"
+For dates older than 8 days, pass a range parameter (-r) to access up to 30
+days:
+   ./oe1archive -s "Show Name" -r 30
 
 You can also manually browse: https://oe1.orf.at/programm/YYYYMMDD
 Then search for the show by name in this tool.
 
 USAGE EXAMPLES:
   ./oe1archive -c                          # Browse and select
-  ./oe1archive -s "Title"                  # Search by title/subtitle (fast)
+  ./oe1archive -s "Title" -r 30            # Search by title/subtitle (fast)
   ./oe1archive -s "Description" -e         # Search with description (slow)
   ./oe1archive -d "Title" -p "L"           # Download all matches
   ./oe1archive -d "Description" -p "L" -e  # Download with extended search
@@ -96,7 +96,7 @@ class Archive:
             print(f"Error fetching broadcasts: {e}", file=sys.stderr)
 
     def _extend_archive_by_days(self, days):
-        """Generate a 30-day view by fetching data from the API."""
+        """Extends archive up to given number of days back."""
 
         self.json = []
         # Add all API data
@@ -482,6 +482,8 @@ Usage:
                                  (requires directory prefix via -p)
     {0} -p, --prefix PREFIX     Directory prefix for downloads
     {0} -e, --extended-search   Extended search (use with -s or -d)
+    {0} -r, --range DAYS        Extended range from 8 days to given number
+                                    (max 30 days)
 
 Examples:
     {0} -c                      Choose broadcast interactively
@@ -625,9 +627,9 @@ def print_broadcast_info(archive, day, broadcast):
 
 if __name__ == "__main__":
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hcs:p:d:e", [
+        opts, args = getopt.getopt(sys.argv[1:], "hcs:p:d:r:e", [
                                    "help", "choose", "search=", "prefix=",
-                                   "download=", "extended-search"])
+                                   "download=", "range=", "extended-search"])
     except getopt.GetoptError as err:
         print(err)
         screen_help()
@@ -639,6 +641,7 @@ if __name__ == "__main__":
     prefix = ""
     choose_mode = False
     extended_search = False
+    days = 0
 
     for o, a in opts:
         if o in ["-h", "--help"]:
@@ -652,11 +655,17 @@ if __name__ == "__main__":
             download_key = a
         if o in ["-p", "--prefix"]:
             prefix = a
+        if o in ["-r", "--range"]:
+            try:
+                days = int(a)
+            except ValueError:
+                print("Error: Invalid number of days for --range")
+                sys.exit(1)
         if o in ["-e", "--extended-search"]:
             extended_search = True
 
     # Initialize archive
-    archive = Archive(days=30)
+    archive = Archive(days)
 
     # Execute requested action
     if choose_mode:
