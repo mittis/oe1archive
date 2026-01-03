@@ -278,18 +278,17 @@ class Archive:
         rex = re.compile(key, re.IGNORECASE)
 
         res = []
-        total_broadcasts = sum(len(djson["broadcasts"]) for djson in self.json)
-        checked_broadcasts = 0
+        total = sum(len(djson["broadcasts"]) for djson in self.json)
+        checked = 0
 
         for d, djson in enumerate(self.json):
             for b, bjson in enumerate(djson["broadcasts"]):
-                checked_broadcasts += 1
+                checked += 1
 
                 # Show progress every 10 broadcasts
-                if checked_broadcasts % 10 == 0:
+                if checked % 10 == 0:
                     print(
-                        f"Searching... {
-                            checked_broadcasts}/{total_broadcasts} broadcasts checked",
+                        f"Searching... {checked}/{total} broadcasts checked",
                         file=sys.stderr)
 
                 # Skip placeholder entries in search
