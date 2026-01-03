@@ -226,7 +226,7 @@ class Archive:
         date = self.json[day]["day"]
         pk = broadcast_entry["programKey"]
 
-        burl = AUDIOAPI_API_URL + "broadcasts/%s/%d"
+        burl = AUDIOAPI_API_URL + "broadcast/%s/%d"
         try:
             bjson = read_json(burl % (pk, date))
         except Exception as e:
@@ -251,7 +251,7 @@ class Archive:
         date = self.json[day]["day"]
         pk = self.json[day]["broadcasts"][broadcast]["programKey"]
 
-        burl = AUDIOAPI_API_URL + "broadcasts/%s/%d"
+        burl = AUDIOAPI_API_URL + "broadcast/%s/%d"
         try:
             bjson = read_json(burl % (pk, date))
         except Exception:
@@ -313,7 +313,7 @@ class Archive:
                     try:
                         date = djson["day"]
                         pk = bjson["programKey"]
-                        burl = AUDIOAPI_API_URL + "broadcasts/%s/%d"
+                        burl = AUDIOAPI_API_URL + "broadcast/%s/%d"
                         bjson_full = read_json(burl % (pk, date))
                         description = bjson_full.get("description", "")
                         if description and rex.search(description) is not None:
