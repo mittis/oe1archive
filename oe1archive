@@ -265,17 +265,35 @@ class Archive:
             akm = ""
         return description + "<br>" + akm
 
+    def _smart_escape_for_regex(self, pattern):
+        """Escape literal chars () {} while preserving regex patterns like .*
+        
+        Args:
+            pattern: Search pattern string
+
+        Returns:
+            Pattern with literal characters escaped for regex
+        """
+        chars_to_escape = ['(', ')', '{', '}']
+        result = pattern
+        for char in chars_to_escape:
+            result = result.replace(char, '\\' + char)
+        return result
+
     def get_broadcasts_by_regex(self, key, deep_search=False):
-        """Find broadcasts matching a regex pattern.
+        """Find broadcasts matching a search pattern (with smart escaping).
 
         Args:
-            key: Search pattern (regex)
+            key: Search pattern (literal by default, but supports regex patterns)
+                 Literal characters like () and {} are automatically escaped,
+                 while regex patterns like .* and | continue to work.
             deep_search: If True, search in title, subtitle, and description.
                         If False, search only in title and subtitle (faster).
 
         Skips placeholder entries.
         """
-        rex = re.compile(key, re.IGNORECASE)
+        escaped_key = self._smart_escape_for_regex(key)
+        rex = re.compile(escaped_key, re.IGNORECASE)
 
         res = []
         total = sum(len(djson["broadcasts"]) for djson in self.json)
