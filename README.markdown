@@ -62,14 +62,61 @@ extended search:
 # Fast search by title/subtitle
 ./oe1archive -s "Show Name"
 
+# Search for show with special characters (automatically escaped)
+./oe1archive -s "Das gute Leben (2)"
+
+# Search using regex patterns (wildcards still work)
+./oe1archive -s "Das.*Leben"
+
+# Search with alternation (OR) patterns
+./oe1archive -s "Music|Talk"
+
 # Deep search including descriptions
 ./oe1archive -s "Some Keyword" -e -r 30
 
 # Batch download all matches (fast search)
 ./oe1archive -d "Show Name" -p "prefix" -r 30
 
+# Batch download with special characters in title
+./oe1archive -d "Das gute Leben (2)" -p "prefix"
+
 # Batch download all matches (deep search)
 ./oe1archive -d "Some Keyword" -p "prefix" -e -r 30
+```
+
+## Search Behavior and Regex Escaping
+
+The search feature uses **smart escaping** to make searching for titles with special characters intuitive, while preserving regex pattern support.
+
+### Automatically Escaped Characters
+The following characters are **automatically escaped** (treated as literals):
+- `(` `)` - parentheses
+- `{` `}` - curly braces
+
+This means you can search for titles like "Das gute Leben (2)" without needing to manually escape the parentheses.
+
+### Supported Regex Patterns
+The following regex patterns **still work** and are NOT escaped:
+- `.*` - match any characters (wildcard)
+- `.+` - match one or more of any character
+- `|` - alternation (OR operator)
+- `^` - start of string
+- `$` - end of string
+- `[...]` - character classes
+
+### Examples
+```bash
+# Literal search - parentheses are automatically escaped
+./oe1archive -s "Das gute Leben (2)"
+
+# Regex wildcard - matches "Das gute Leben", "Das schöne Leben", etc.
+./oe1archive -s "Das.*Leben"
+
+# Combine both - wildcard with escaped parentheses
+./oe1archive -s "Das.*Leben (2)"
+
+# Alternation - matches either "Music" or "Talk"
+./oe1archive -s "Music|Talk"
 ```
 
 ## How It Works
